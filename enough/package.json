@@ -1,0 +1,57 @@
+{
+  "name": "simple-enough",
+  "author": "Eduardo Chiaro",
+  "version": "1.4.0",
+  "keywords": [
+    "pebble-app",
+    "watchface",
+    "simple"
+  ],
+  "private": true,
+  "dependencies": {
+    "@rebble/clay": "^1.0.6"
+  },
+  "pebble": {
+    "displayName": "Simple Enough",
+    "uuid": "fe189c1f-5846-43c7-aa83-81ae5dfe2049",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "INVERT_COLORS"
+    ],
+    "resources": {
+      "media": [
+        {
+          "menuIcon": "true",
+          "type": "png",
+          "name": "MENU_ICON",
+          "file": "icon.png"
+        },
+        {
+          "type": "raw",
+          "name": "NUMBER_6_BLACK",
+          "file": "6-black.pdc"
+        },
+        {
+          "type": "raw",
+          "name": "NUMBER_6_WHITE",
+          "file": "6-white.pdc"
+        }
+      ]
+    },
+    "capabilities": [
+      "configurable"
+    ]
+  }
+}

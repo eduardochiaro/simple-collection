@@ -1,0 +1,42 @@
+[
+  {
+    "type": "heading",
+    "defaultValue": "Simple Slice Settings"
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "defaultValue": "Screen"
+      },
+      {
+        "type": "color",
+        "messageKey": "BACKGROUND_COLOR",
+        "defaultValue": "FFFFFF",
+        "label": "Background Color",
+        "sunlight": true,
+        "allowGray": true,
+        "layout": "BLACK_WHITE",
+        "capabilities": ["RECT"]
+      },
+      {
+        "type": "toggle",
+        "messageKey": "USE_RECT",
+        "label": "Use Rectangular Screen",
+        "defaultValue": false,
+        "capabilities": ["RECT"]
+      },
+      {
+        "type": "toggle",
+        "messageKey": "SHOW_NUMBERS",
+        "label": "Show Hour and Minute Numbers",
+        "defaultValue": false
+      }
+    ]
+  },
+  {
+    "type": "submit",
+    "defaultValue": "Save Settings"
+  }
+]

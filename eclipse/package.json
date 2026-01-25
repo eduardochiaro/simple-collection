@@ -1,0 +1,46 @@
+{
+  "name": "simple-eclipse",
+  "author": "Eduardo Chiaro",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-watchface",
+    "simple",
+    "eclipse"
+  ],
+  "private": true,
+  "dependencies": {
+    "@rebble/clay": "^1.0.6"
+  },
+  "pebble": {
+    "displayName": "Simple Eclipse",
+    "uuid": "d358b3ba-af8f-4dd2-93d1-2f5bd0adf1e5",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "INVERT_COLORS",
+      "USE_SQUARE",
+      "HOURS_COLOR"
+    ],
+    "resources": {
+      "media": [
+        {
+          "menuIcon": "true",
+          "type": "png",
+          "name": "MENU_ICON",
+          "file": "icon.png"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "simple-slice",
+  "author": "Eduardo Chiaro",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-app",
+    "watchface",
+    "simple"
+  ],
+  "private": true,
+  "dependencies": {
+    "@rebble/clay": "^1.0.6"
+  },
+  "pebble": {
+    "displayName": "Simple Slice",
+    "uuid": "c7d3e477-7c4d-4e9b-bc4f-b03c3a141cff",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "BACKGROUND_COLOR",
+      "USE_RECT",
+      "SHOW_NUMBERS"
+    ],
+    "resources": {
+      "media": []
+    }
+  }
+}
