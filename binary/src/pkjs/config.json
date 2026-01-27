@@ -26,12 +26,6 @@
         "label": "Use Rectangular Screen",
         "defaultValue": false,
         "capabilities": ["RECT"]
-      },
-      {
-        "type": "toggle",
-        "messageKey": "SHOW_NUMBERS",
-        "label": "Show Hour and Minute Numbers",
-        "defaultValue": false
       }
     ]
   },

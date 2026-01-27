@@ -8,7 +8,6 @@ static int s_radius;
 static int s_minute_hand_length = 50;
 static GColor s_background_color;
 static bool s_use_rect;
-static bool s_show_numbers;
 
 // Calculate the angle for hour hand (0 = 12 o'clock, clockwise)
 static int32_t get_hour_angle(struct tm *tick_time) {
@@ -38,15 +37,12 @@ static bool is_white_phase(int hour) {
 static void load_settings() {
   s_use_rect = persist_exists(MESSAGE_KEY_USE_RECT) ? 
                persist_read_bool(MESSAGE_KEY_USE_RECT) : false;
-  s_show_numbers = persist_exists(MESSAGE_KEY_SHOW_NUMBERS) ? 
-                   persist_read_bool(MESSAGE_KEY_SHOW_NUMBERS) : false;
   s_background_color = persist_exists(MESSAGE_KEY_BACKGROUND_COLOR) ? (GColor){ .argb = (uint8_t)persist_read_int(MESSAGE_KEY_BACKGROUND_COLOR) } : GColorWhite;
 }
 
 // Save settings
 static void save_settings() {
   persist_write_bool(MESSAGE_KEY_USE_RECT, s_use_rect);
-  persist_write_bool(MESSAGE_KEY_SHOW_NUMBERS, s_show_numbers);
   persist_write_int(MESSAGE_KEY_BACKGROUND_COLOR, s_background_color.argb);
 }
 
@@ -57,12 +53,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   
   if (rect_tuple) {
     s_use_rect = rect_tuple->value->int32 == 1;
-    changed = true;
-  }
-  
-  Tuple *numbers_tuple = dict_find(iterator, MESSAGE_KEY_SHOW_NUMBERS);
-  if (numbers_tuple) {
-    s_show_numbers = numbers_tuple->value->int32 == 1;
     changed = true;
   }
 
@@ -163,49 +153,6 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   };
   
   graphics_draw_line(ctx, minute_start, minute_end);
-  
-  // Draw numbers if enabled
-  if (s_show_numbers) {
-    static char hour_buffer[3];
-    static char minute_buffer[3];
-    
-    // Format hour (12-hour format)
-    int display_hour = hour % 12;
-    if (display_hour == 0) display_hour = 12;
-    snprintf(hour_buffer, sizeof(hour_buffer), "%d", display_hour);
-    
-    // Format minute
-    snprintf(minute_buffer, sizeof(minute_buffer), "%d", tick_time->tm_min);
-    
-    // Draw hour number inside the watch face, positioned along the hour slice edge
-    // Place it slightly inside the circle (about 70% of radius from center)
-    int32_t hour_sin = sin_lookup(hour_angle);
-    int32_t hour_cos = cos_lookup(hour_angle);
-    GPoint hour_pos = (GPoint){
-      .x = s_center.x + (hour_sin * (s_radius * 7 / 10) / TRIG_MAX_RATIO),
-      .y = s_center.y - (hour_cos * (s_radius * 7 / 10) / TRIG_MAX_RATIO)
-    };
-    
-    // Determine hour number color (reverse of background at that position)
-    // At the slice edge in the unfilled region
-    GColor hour_color = white_phase ? GColorWhite : GColorBlack;
-    
-    graphics_context_set_text_color(ctx, hour_color);
-    graphics_draw_text(ctx, hour_buffer, 
-                      fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
-                      GRect(hour_pos.x - 10, hour_pos.y, 40, 20),
-                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-    
-    // Draw minute number at the end of minute hand
-    // Use opposite color of minute hand for visibility
-    GColor minute_color = !minute_on_white_bg ? GColorWhite : GColorBlack;
-    
-    graphics_context_set_text_color(ctx, minute_color);
-    graphics_draw_text(ctx, minute_buffer,
-                      fonts_get_system_font(FONT_KEY_LECO_20_BOLD_NUMBERS),
-                      GRect(minute_end.x + 5, minute_end.y - 15, 30, 20),
-                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-  }
   
   // Draw border
   graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, reverse_color(s_background_color)));
