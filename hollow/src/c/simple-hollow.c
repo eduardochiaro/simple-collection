@@ -1,12 +1,34 @@
 #include <pebble.h>
 
-static Window *s_main_window; 
+#if defined(__has_include)
+#  if __has_include("message_keys.auto.h")
+#    include "message_keys.auto.h"
+#  endif
+#endif
+
+#ifndef MESSAGE_KEY_USE_RECT
+#define MESSAGE_KEY_USE_RECT 0
+#endif
+#ifndef MESSAGE_KEY_BACKGROUND_COLOR
+#define MESSAGE_KEY_BACKGROUND_COLOR 1
+#endif
+#ifndef MESSAGE_KEY_HOURS_COLOR
+#define MESSAGE_KEY_HOURS_COLOR 2
+#endif
+#ifndef MESSAGE_KEY_MINUTES_COLOR
+#define MESSAGE_KEY_MINUTES_COLOR 3
+#endif
+
+static Window *s_main_window;
 static Layer *s_canvas_layer;
 
 static GPoint s_center;
 static int s_radius;
-static int s_minute_hand_length = 50;
+static int s_hour_hand_length = 60;
+static int s_minute_hand_length = 40;
 static GColor s_background_color;
+static GColor s_hours_color;
+static GColor s_minutes_color;
 static bool s_use_rect;
 
 // Calculate the angle for hour hand (0 = 12 o'clock, clockwise)
@@ -20,7 +42,7 @@ static int32_t get_hour_angle(struct tm *tick_time) {
   int minute = tick_time->tm_min;
   
   // Calculate precise angle including minutes
-  return TRIG_MAX_ANGLE / 12 * hour;
+  return TRIG_MAX_ANGLE / 12 * hour + (TRIG_MAX_ANGLE / 12) * minute / 60;
 }
 
 // Calculate the angle for minute hand (0 = 12 o'clock, clockwise)
@@ -28,22 +50,20 @@ static int32_t get_minute_angle(struct tm *tick_time) {
   return TRIG_MAX_ANGLE * tick_time->tm_min / 60;
 }
 
-// Check if we're in the "white" phase (before noon) or "black" phase (after noon)
-static bool is_white_phase(int hour) {
-  return hour < 12;
-}
-
 // Load settings
 static void load_settings() {
-  s_use_rect = persist_exists(MESSAGE_KEY_USE_RECT) ? 
-               persist_read_bool(MESSAGE_KEY_USE_RECT) : false;
+  s_use_rect = persist_exists(MESSAGE_KEY_USE_RECT) ? persist_read_bool(MESSAGE_KEY_USE_RECT) : false;
   s_background_color = persist_exists(MESSAGE_KEY_BACKGROUND_COLOR) ? (GColor){ .argb = (uint8_t)persist_read_int(MESSAGE_KEY_BACKGROUND_COLOR) } : GColorWhite;
+  s_hours_color = persist_exists(MESSAGE_KEY_HOURS_COLOR) ? (GColor){ .argb = (uint8_t)persist_read_int(MESSAGE_KEY_HOURS_COLOR) } : GColorBlack;
+  s_minutes_color = persist_exists(MESSAGE_KEY_MINUTES_COLOR) ? (GColor){ .argb = (uint8_t)persist_read_int(MESSAGE_KEY_MINUTES_COLOR) } : GColorBlack;
 }
 
 // Save settings
 static void save_settings() {
   persist_write_bool(MESSAGE_KEY_USE_RECT, s_use_rect);
   persist_write_int(MESSAGE_KEY_BACKGROUND_COLOR, s_background_color.argb);
+  persist_write_int(MESSAGE_KEY_HOURS_COLOR, s_hours_color.argb);
+  persist_write_int(MESSAGE_KEY_MINUTES_COLOR, s_minutes_color.argb);
 }
 
 // Inbox received callback
@@ -59,6 +79,18 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *bgcolor_tuple = dict_find(iterator, MESSAGE_KEY_BACKGROUND_COLOR);
   if (bgcolor_tuple) {
     s_background_color = GColorFromHEX(bgcolor_tuple->value->int32);
+    changed = true;
+  }
+
+  Tuple *hourscolor_tuple = dict_find(iterator, MESSAGE_KEY_HOURS_COLOR);
+  if (hourscolor_tuple) {
+    s_hours_color = GColorFromHEX(hourscolor_tuple->value->int32);
+    changed = true;
+  }
+
+  Tuple *minutescolor_tuple = dict_find(iterator, MESSAGE_KEY_MINUTES_COLOR);
+  if (minutescolor_tuple) {
+    s_minutes_color = GColorFromHEX(minutescolor_tuple->value->int32);
     changed = true;
   }
 
@@ -92,64 +124,44 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   int32_t minute_angle = get_minute_angle(tick_time);
   int hour = tick_time->tm_hour;
   
-  bool white_phase = is_white_phase(hour);
-  
   // Fill the background white
   graphics_context_set_fill_color(ctx, s_background_color);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
   
-  // Create bounding rect for radial fill
-  GRect rect = GRect(s_center.x - s_radius, s_center.y - s_radius, s_radius * 2, s_radius * 2);
+  // Draw hour hand (from border to center, starting at s_hour_hand_length from center)
+  graphics_context_set_stroke_color(ctx, s_hours_color);
+  graphics_context_set_stroke_width(ctx, 4);
   
-  int32_t start_at_12 = TRIG_MAX_ANGLE / 4;
+  int32_t sin_hour_val = sin_lookup(hour_angle);
+  int32_t cos_hour_val = cos_lookup(hour_angle);
   
-  int32_t end_angle = start_at_12 - hour_angle;
-  while (end_angle < 0) end_angle += TRIG_MAX_ANGLE;
+  GPoint hour_start = (GPoint){
+    .x = s_center.x + (sin_hour_val * s_radius / TRIG_MAX_RATIO),
+    .y = s_center.y - (cos_hour_val * s_radius / TRIG_MAX_RATIO)
+  };
   
-  if (white_phase) {
-    // 0-12 hours: Start black, fill white clockwise from 12
-    graphics_context_set_fill_color(ctx, GColorBlack);
-    graphics_fill_circle(ctx, s_center, s_radius);
-    
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_radial(ctx, rect, GOvalScaleModeFitCircle, s_radius, 0, hour_angle);
-  } else {
-    // 12-24 hours: Start white, fill black clockwise from 12
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_circle(ctx, s_center, s_radius);
-    
-    graphics_context_set_fill_color(ctx, GColorBlack);
-    graphics_fill_radial(ctx, rect, GOvalScaleModeFitCircle, s_radius, 0, hour_angle);
-  }
+  GPoint hour_end = (GPoint){
+    .x = s_center.x + (sin_hour_val * s_hour_hand_length / TRIG_MAX_RATIO),
+    .y = s_center.y - (cos_hour_val * s_hour_hand_length / TRIG_MAX_RATIO)
+  };
   
-  // Draw minute hand
-  // Determine color based on background at minute position
-  bool minute_on_white_bg;
+  graphics_draw_line(ctx, hour_start, hour_end);
   
-  if (white_phase) {
-    // White phase: filled region (0 to hour_angle) is white, rest is black
-    minute_on_white_bg = (minute_angle <= hour_angle);
-  } else {
-    // Black phase: filled region (0 to hour_angle) is black, rest is white
-    minute_on_white_bg = (minute_angle > hour_angle);
-  }
+  // Draw minute hand (from border to center, starting at s_minute_hand_length from center)
+  graphics_context_set_stroke_color(ctx, s_minutes_color);
+  graphics_context_set_stroke_width(ctx, 4);
   
-  graphics_context_set_stroke_color(ctx, minute_on_white_bg ? GColorBlack : GColorWhite);
-  graphics_context_set_stroke_width(ctx, 2);
-  
-  // Calculate direction vector
   int32_t sin_val = sin_lookup(minute_angle);
   int32_t cos_val = cos_lookup(minute_angle);
   
-  // Start from the edge of the circle (at s_radius)
   GPoint minute_start = (GPoint){
     .x = s_center.x + (sin_val * s_radius / TRIG_MAX_RATIO),
     .y = s_center.y - (cos_val * s_radius / TRIG_MAX_RATIO)
   };
   
   GPoint minute_end = (GPoint){
-    .x = s_center.x + (sin_val * (s_minute_hand_length) / TRIG_MAX_RATIO),
-    .y = s_center.y - (cos_val * (s_minute_hand_length) / TRIG_MAX_RATIO)
+    .x = s_center.x + (sin_val * s_minute_hand_length / TRIG_MAX_RATIO),
+    .y = s_center.y - (cos_val * s_minute_hand_length / TRIG_MAX_RATIO)
   };
   
   graphics_draw_line(ctx, minute_start, minute_end);

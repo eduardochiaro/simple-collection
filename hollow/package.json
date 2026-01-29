@@ -1,0 +1,40 @@
+{
+  "name": "simple-hollow",
+  "author": "Eduardo Chiaro",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-watchface",
+    "simple",
+    "hollow"
+  ],
+  "private": true,
+  "dependencies": {
+    "@rebble/clay": "^1.0.6"
+  },
+  "pebble": {
+    "displayName": "Simple Hollow",
+    "uuid": "c558b82c-5f54-47f0-b366-4d3c01f8ce7d",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "HOURS_COLOR",
+      "MINUTES_COLOR",
+      "BACKGROUND_COLOR",
+      "USE_RECT"
+    ],
+    "resources": {
+      "media": []
+    }
+  }
+}
