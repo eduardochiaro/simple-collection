@@ -30,6 +30,8 @@
     "messageKeys": [
       "HOURS_COLOR",
       "MINUTES_COLOR",
+      "HOURS_OVERLAY_COLOR",
+      "MINUTES_OVERLAY_COLOR",
       "BACKGROUND_COLOR",
       "USE_RECT"
     ],

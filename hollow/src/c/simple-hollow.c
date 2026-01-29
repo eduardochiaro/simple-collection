@@ -5,12 +5,14 @@ static Layer *s_canvas_layer;
 
 static GPoint s_center;
 static int s_radius;
-static int s_hour_hand_length = 60;
+static int s_hour_hand_length = 70;
 static int s_minute_hand_length = 40;
 static int s_hover_hand_length = 20;
 static GColor s_background_color;
 static GColor s_hours_color;
 static GColor s_minutes_color;
+static GColor s_hours_overlay_color;
+static GColor s_minutes_overlay_color;
 static bool s_use_rect;
 
 // Calculate the angle for hour hand (0 = 12 o'clock, clockwise)
@@ -38,6 +40,8 @@ static void load_settings() {
   s_background_color = persist_exists(MESSAGE_KEY_BACKGROUND_COLOR) ? (GColor){ .argb = (uint8_t)persist_read_int(MESSAGE_KEY_BACKGROUND_COLOR) } : GColorWhite;
   s_hours_color = persist_exists(MESSAGE_KEY_HOURS_COLOR) ? (GColor){ .argb = (uint8_t)persist_read_int(MESSAGE_KEY_HOURS_COLOR) } : GColorBlack;
   s_minutes_color = persist_exists(MESSAGE_KEY_MINUTES_COLOR) ? (GColor){ .argb = (uint8_t)persist_read_int(MESSAGE_KEY_MINUTES_COLOR) } : GColorBlack;
+  s_hours_overlay_color = persist_exists(MESSAGE_KEY_HOURS_OVERLAY_COLOR) ? (GColor){ .argb = (uint8_t)persist_read_int(MESSAGE_KEY_HOURS_OVERLAY_COLOR) } : GColorMalachite;
+  s_minutes_overlay_color = persist_exists(MESSAGE_KEY_MINUTES_OVERLAY_COLOR) ? (GColor){ .argb = (uint8_t)persist_read_int(MESSAGE_KEY_MINUTES_OVERLAY_COLOR) } : GColorMalachite;
 }
 
 // Save settings
@@ -46,6 +50,8 @@ static void save_settings() {
   persist_write_int(MESSAGE_KEY_BACKGROUND_COLOR, s_background_color.argb);
   persist_write_int(MESSAGE_KEY_HOURS_COLOR, s_hours_color.argb);
   persist_write_int(MESSAGE_KEY_MINUTES_COLOR, s_minutes_color.argb);
+  persist_write_int(MESSAGE_KEY_HOURS_OVERLAY_COLOR, s_hours_overlay_color.argb);
+  persist_write_int(MESSAGE_KEY_MINUTES_OVERLAY_COLOR, s_minutes_overlay_color.argb);
 }
 
 // Inbox received callback
@@ -76,6 +82,18 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     changed = true;
   }
 
+  Tuple *hoursoverlaycolor_tuple = dict_find(iterator, MESSAGE_KEY_HOURS_OVERLAY_COLOR);
+  if (hoursoverlaycolor_tuple) {
+    s_hours_overlay_color = GColorFromHEX(hoursoverlaycolor_tuple->value->int32);
+    changed = true;
+  }
+
+  Tuple *minutesoverlaycolor_tuple = dict_find(iterator, MESSAGE_KEY_MINUTES_OVERLAY_COLOR);
+  if (minutesoverlaycolor_tuple) {
+    s_minutes_overlay_color = GColorFromHEX(minutesoverlaycolor_tuple->value->int32);
+    changed = true;
+  } 
+
   save_settings();
 
   if (changed) {
@@ -95,6 +113,11 @@ static GColor reverse_color(GColor color) {
 static void canvas_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   s_center = grect_center_point(&bounds);
+
+  if (s_use_rect) {
+    s_hour_hand_length = 40;
+    s_minute_hand_length = 20;
+  }
   
   // Calculate radius to fit in the display
   s_radius = !s_use_rect ? ((bounds.size.w - 2) / 2) : ((bounds.size.h) / 2 + 40);
@@ -134,7 +157,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_line(ctx, hour_start, hour_end);
   
   // Draw white inner stroke for hour hand (from hour_end, 10px toward border)
-  graphics_context_set_stroke_color(ctx, GColorMalachite);
+  graphics_context_set_stroke_color(ctx, s_hours_overlay_color);
   graphics_context_set_stroke_width(ctx, 2);
   
   GPoint hour_white_end = (GPoint){
@@ -167,7 +190,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_line(ctx, minute_start, minute_end);
   
   // Draw white inner stroke for minute hand (from minute_end, 10px toward border)
-  graphics_context_set_stroke_color(ctx, GColorMalachite);
+  graphics_context_set_stroke_color(ctx, s_minutes_overlay_color);
   graphics_context_set_stroke_width(ctx, 2);
   
   GPoint minute_white_end = (GPoint){

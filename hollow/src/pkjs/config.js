@@ -12,12 +12,19 @@ module.exports = [
       },
       {
         "type": "color",
-        "messageKey": "HOUR_COLOR",
+        "messageKey": "HOURS_COLOR",
         "defaultValue": "000000",
         "label": "Hours Color",
         "sunlight": true,
-        "allowGray": true,
-        "capabilities": ["COLOR"]
+        "allowGray": true
+      },
+      {
+        "type": "color",
+        "messageKey": "HOURS_OVERLAY_COLOR",
+        "defaultValue": "8EE69E",
+        "label": "Hours Overlay Color",
+        "sunlight": true,
+        "allowGray": true
       },
       {
         "type": "color",
@@ -25,8 +32,15 @@ module.exports = [
         "defaultValue": "000000",
         "label": "Minutes Color",
         "sunlight": true,
-        "allowGray": true,
-        "capabilities": ["COLOR"]
+        "allowGray": true
+      },
+      {
+        "type": "color",
+        "messageKey": "MINUTES_OVERLAY_COLOR",
+        "defaultValue": "8EE69E",
+        "label": "Minutes Overlay Color",
+        "sunlight": true,
+        "allowGray": true
       },
       {
         "type": "color",
@@ -34,12 +48,11 @@ module.exports = [
         "defaultValue": "FFFFFF",
         "label": "Background Color",
         "sunlight": true,
-        "allowGray": true,
-        "capabilities": ["COLOR"]
+        "allowGray": true
       },
       {
         "type": "toggle",
-        "messageKey": "USE_SQUARE",
+        "messageKey": "USE_RECT",
         "label": "Use Square design",
         "description": "Switch between square and round design.",
         "defaultValue": false,
