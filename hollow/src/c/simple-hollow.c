@@ -117,14 +117,18 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   int32_t sin_hour_val = sin_lookup(hour_angle);
   int32_t cos_hour_val = cos_lookup(hour_angle);
   
+  // Calculate actual hand length as percentage of radius
+  int hour_hand_actual = s_radius * s_hour_hand_length / 100;
+  int hover_hand_actual = s_radius * s_hover_hand_length / 100;
+  
   GPoint hour_start = (GPoint){
     .x = s_center.x + (sin_hour_val * s_radius / TRIG_MAX_RATIO),
     .y = s_center.y - (cos_hour_val * s_radius / TRIG_MAX_RATIO)
   };
   
   GPoint hour_end = (GPoint){
-    .x = s_center.x + (sin_hour_val * s_hour_hand_length / TRIG_MAX_RATIO),
-    .y = s_center.y - (cos_hour_val * s_hour_hand_length / TRIG_MAX_RATIO)
+    .x = s_center.x + (sin_hour_val * hour_hand_actual / TRIG_MAX_RATIO),
+    .y = s_center.y - (cos_hour_val * hour_hand_actual / TRIG_MAX_RATIO)
   };
   
   graphics_draw_line(ctx, hour_start, hour_end);
@@ -134,8 +138,8 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_stroke_width(ctx, 2);
   
   GPoint hour_white_end = (GPoint){
-    .x = s_center.x + (sin_hour_val * (s_hour_hand_length + s_hover_hand_length) / TRIG_MAX_RATIO),
-    .y = s_center.y - (cos_hour_val * (s_hour_hand_length + s_hover_hand_length) / TRIG_MAX_RATIO)
+    .x = s_center.x + (sin_hour_val * (hour_hand_actual + hover_hand_actual) / TRIG_MAX_RATIO),
+    .y = s_center.y - (cos_hour_val * (hour_hand_actual + hover_hand_actual) / TRIG_MAX_RATIO)
   };
   
   graphics_draw_line(ctx, hour_end, hour_white_end);
@@ -147,14 +151,17 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   int32_t sin_val = sin_lookup(minute_angle);
   int32_t cos_val = cos_lookup(minute_angle);
   
+  // Calculate actual hand length as percentage of radius
+  int minute_hand_actual = s_radius * s_minute_hand_length / 100;
+  
   GPoint minute_start = (GPoint){
     .x = s_center.x + (sin_val * s_radius / TRIG_MAX_RATIO),
     .y = s_center.y - (cos_val * s_radius / TRIG_MAX_RATIO)
   };
   
   GPoint minute_end = (GPoint){
-    .x = s_center.x + (sin_val * s_minute_hand_length / TRIG_MAX_RATIO),
-    .y = s_center.y - (cos_val * s_minute_hand_length / TRIG_MAX_RATIO)
+    .x = s_center.x + (sin_val * minute_hand_actual / TRIG_MAX_RATIO),
+    .y = s_center.y - (cos_val * minute_hand_actual / TRIG_MAX_RATIO)
   };
   
   graphics_draw_line(ctx, minute_start, minute_end);
@@ -164,8 +171,8 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_stroke_width(ctx, 2);
   
   GPoint minute_white_end = (GPoint){
-    .x = s_center.x + (sin_val * (s_minute_hand_length + s_hover_hand_length) / TRIG_MAX_RATIO),
-    .y = s_center.y - (cos_val * (s_minute_hand_length + s_hover_hand_length) / TRIG_MAX_RATIO)
+    .x = s_center.x + (sin_val * (minute_hand_actual + hover_hand_actual) / TRIG_MAX_RATIO),
+    .y = s_center.y - (cos_val * (minute_hand_actual + hover_hand_actual) / TRIG_MAX_RATIO)
   };
   
   graphics_draw_line(ctx, minute_end, minute_white_end);
