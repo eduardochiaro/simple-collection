@@ -1,24 +1,5 @@
 #include <pebble.h>
 
-#if defined(__has_include)
-#  if __has_include("message_keys.auto.h")
-#    include "message_keys.auto.h"
-#  endif
-#endif
-
-#ifndef MESSAGE_KEY_USE_RECT
-#define MESSAGE_KEY_USE_RECT 0
-#endif
-#ifndef MESSAGE_KEY_BACKGROUND_COLOR
-#define MESSAGE_KEY_BACKGROUND_COLOR 1
-#endif
-#ifndef MESSAGE_KEY_HOURS_COLOR
-#define MESSAGE_KEY_HOURS_COLOR 2
-#endif
-#ifndef MESSAGE_KEY_MINUTES_COLOR
-#define MESSAGE_KEY_MINUTES_COLOR 3
-#endif
-
 static Window *s_main_window;
 static Layer *s_canvas_layer;
 
@@ -26,6 +7,7 @@ static GPoint s_center;
 static int s_radius;
 static int s_hour_hand_length = 60;
 static int s_minute_hand_length = 40;
+static int s_hover_hand_length = 20;
 static GColor s_background_color;
 static GColor s_hours_color;
 static GColor s_minutes_color;
@@ -147,6 +129,17 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   
   graphics_draw_line(ctx, hour_start, hour_end);
   
+  // Draw white inner stroke for hour hand (from hour_end, 10px toward border)
+  graphics_context_set_stroke_color(ctx, GColorMalachite);
+  graphics_context_set_stroke_width(ctx, 2);
+  
+  GPoint hour_white_end = (GPoint){
+    .x = s_center.x + (sin_hour_val * (s_hour_hand_length + s_hover_hand_length) / TRIG_MAX_RATIO),
+    .y = s_center.y - (cos_hour_val * (s_hour_hand_length + s_hover_hand_length) / TRIG_MAX_RATIO)
+  };
+  
+  graphics_draw_line(ctx, hour_end, hour_white_end);
+  
   // Draw minute hand (from border to center, starting at s_minute_hand_length from center)
   graphics_context_set_stroke_color(ctx, s_minutes_color);
   graphics_context_set_stroke_width(ctx, 4);
@@ -165,6 +158,17 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   };
   
   graphics_draw_line(ctx, minute_start, minute_end);
+  
+  // Draw white inner stroke for minute hand (from minute_end, 10px toward border)
+  graphics_context_set_stroke_color(ctx, GColorMalachite);
+  graphics_context_set_stroke_width(ctx, 2);
+  
+  GPoint minute_white_end = (GPoint){
+    .x = s_center.x + (sin_val * (s_minute_hand_length + s_hover_hand_length) / TRIG_MAX_RATIO),
+    .y = s_center.y - (cos_val * (s_minute_hand_length + s_hover_hand_length) / TRIG_MAX_RATIO)
+  };
+  
+  graphics_draw_line(ctx, minute_end, minute_white_end);
   
   // Draw border
   graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, reverse_color(s_background_color)));
