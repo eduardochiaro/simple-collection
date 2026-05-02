@@ -9,7 +9,7 @@ if [ -z "$1" ] || [ -z "$2" ]; then
 fi
 TYPE=$1
 EMULATOR_NAME=$2
-SCREENSHOT_DIR="${TYPE}-edition/assets"
+SCREENSHOT_DIR="${TYPE}/assets"
 SCREENSHOT_PREFIX="${EMULATOR_NAME}_"
 SCREENSHOT_EXTENSION=".png"
 if [ -n "$3" ]; then
