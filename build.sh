@@ -18,7 +18,7 @@ LOGS=()
 DONE=()
 
 echo ""
-echo -e "${BOLD}${CYAN}  ★  Constellation Build${NC}"
+echo -e "${BOLD}${CYAN}  ★  Simple Collection Build${NC}"
 echo -e "${DIM}  ─────────────────────────${NC}"
 echo ""
 
@@ -112,6 +112,6 @@ if $has_failure; then
   echo ""
   exit 1
 else
-  echo -e "${GREEN}${BOLD}  ★  All editions built successfully!${NC}"
+  echo -e "${GREEN}${BOLD}  ★  All watchfaces built successfully!${NC}"
   echo ""
 fi
