@@ -1,7 +1,7 @@
 {
-  "name": "simple-enough",
+  "name": "simple-askew",
   "author": "Eduardo Chiaro",
-  "version": "1.4.0",
+  "version": "1.0.0",
   "keywords": [
     "pebble-app",
     "watchface",
@@ -17,12 +17,10 @@
     "logs": "pebble logs --emulator",
     "tap": "pebble emu-tap --direction y+ --emulator"
   },
-  "dependencies": {
-    "@rebble/clay": "^1.0.8"
-  },
+  "dependencies": {},
   "pebble": {
-    "displayName": "Simple Enough",
-    "uuid": "fe189c1f-5846-43c7-aa83-81ae5dfe2049",
+    "displayName": "Simple Askew",
+    "uuid": "b8fb089f-28ae-447c-acce-f21f82509ffe",
     "sdkVersion": "3",
     "enableMultiJS": true,
     "targetPlatforms": [
@@ -35,33 +33,13 @@
       "gabbro"
     ],
     "watchapp": {
-      "watchface": true
+      "watchface": false
     },
     "messageKeys": [
-      "INVERT_COLORS"
+      "dummy"
     ],
     "resources": {
-      "media": [
-        {
-          "menuIcon": "true",
-          "type": "png",
-          "name": "MENU_ICON",
-          "file": "icon.png"
-        },
-        {
-          "type": "raw",
-          "name": "NUMBER_6_BLACK",
-          "file": "6-black.pdc"
-        },
-        {
-          "type": "raw",
-          "name": "NUMBER_6_WHITE",
-          "file": "6-white.pdc"
-        }
-      ]
-    },
-    "capabilities": [
-      "configurable"
-    ]
+      "media": []
+    }
   }
 }

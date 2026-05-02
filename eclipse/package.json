@@ -8,6 +8,15 @@
     "eclipse"
   ],
   "private": true,
+  "scripts": {
+    "build": "pebble build",
+    "clean": "pebble clean",
+    "emulator": "npm run clean && npm run build && pebble install --emulator ",
+    "phone": "npm run clean && npm run build && pebble install --phone",
+    "config": "pebble emu-app-config --emulator",
+    "logs": "pebble logs --emulator",
+    "tap": "pebble emu-tap --direction y+ --emulator"
+  },
   "dependencies": {
     "@rebble/clay": "^1.0.6"
   },
