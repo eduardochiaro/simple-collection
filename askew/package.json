@@ -39,7 +39,13 @@
       "dummy"
     ],
     "resources": {
-      "media": []
+      "media": [
+        {"type": "bitmap", "name": "TEXT_PEBBLE_10", "file": "images/text_pebble_10.png"},
+        {"type": "bitmap", "name": "TEXT_PEBBLE_15", "file": "images/text_pebble_15.png"},
+        {"type": "bitmap", "name": "TEXT_PEBBLE_20", "file": "images/text_pebble_20.png"},
+        {"type": "bitmap", "name": "TEXT_PEBBLE_25", "file": "images/text_pebble_25.png"},
+        {"type": "bitmap", "name": "TEXT_PEBBLE_30", "file": "images/text_pebble_30.png"}
+      ]
     }
   }
 }

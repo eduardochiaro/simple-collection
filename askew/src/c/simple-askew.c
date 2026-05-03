@@ -1,14 +1,9 @@
 #include <pebble.h>
 
-static int isqrt(int n) {
-  if (n <= 0) return 0;
-  int x = n, y = 1;
-  while (x > y) { x = (x + y) / 2; y = n / x; }
-  return x;
-}
-
 static Window *s_main_window;
 static Layer *s_canvas_layer;
+static BitmapLayer *s_text_layer;
+static GBitmap *s_text_bitmap;
 
 // Time tracking
 static struct tm s_last_time;
@@ -28,9 +23,23 @@ static GColor get_hand_minute_color() {
   #endif
 }
 
-// Rotation offset: rotate entire face clockwise by 15 degrees
-#define ANGLE 10
+// Rotation offset: rotate entire face clockwise by ANGLE degrees
+#define ANGLE 25
 #define ROTATION_OFFSET (TRIG_MAX_ANGLE * ANGLE / 360)
+
+#if ANGLE == 10
+  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_10 
+#elif ANGLE == 15
+  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_15
+#elif ANGLE == 20
+  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_20
+#elif ANGLE == 25
+  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_25
+#elif ANGLE == 30
+  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_30
+#else
+  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_10
+#endif
 
 // Drawing the clock face
 static void canvas_update_proc(Layer *layer, GContext *ctx) {
@@ -46,7 +55,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
 
   int circle_offset = PBL_IF_RECT_ELSE(10, 16);
   // Draw circle behind hands
-  graphics_context_set_fill_color(ctx, GColorLightGray);
+  graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_circle(ctx, center, bounds.size.w / 2 - circle_offset);
 
   // Draw DarkGray band (50px tall) spanning full circle width, rotated by ROTATION_OFFSET
@@ -65,15 +74,16 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   GPath *band_path = gpath_create(&band_info);
   gpath_rotate_to(band_path, ROTATION_OFFSET);
   gpath_move_to(band_path, center);
-  graphics_context_set_fill_color(ctx, GColorDarkGray);
+  graphics_context_set_fill_color(ctx, GColorLightGray);
   gpath_draw_filled(ctx, band_path);
   gpath_destroy(band_path);
 
-  // Mask band overflow: draw black ring outside the circle
+  // Mask band overflow: single thick arc outside the circle
   graphics_context_set_stroke_color(ctx, GColorBlack);
-  for (int r = circle_r + 1; r <= circle_r + 30; r++) {
-    graphics_draw_circle(ctx, center, r);
-  }
+  graphics_context_set_stroke_width(ctx, 30);
+  int arc_r = circle_r + 15;
+  GRect arc_rect = GRect(center.x - arc_r, center.y - arc_r, arc_r * 2, arc_r * 2);
+  graphics_draw_arc(ctx, arc_rect, GOvalScaleModeFitCircle, 0, TRIG_MAX_ANGLE);
 
   // draw radial smaller lines (60 segments)
   graphics_context_set_stroke_color(ctx, GColorWindsorTan);
@@ -106,24 +116,6 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
       .y = (int16_t)(-cos_lookup(angle) * radius / TRIG_MAX_RATIO) + center.y,
     };
     graphics_draw_line(ctx, inner, outer);
-  }
-
-  // Draw "pebble" text just above right side of the band
-  // Local coords: (circle_r/2, -37) = right half, above the band top edge
-  {
-    int lx = circle_r / 2;
-    int ly = -37;
-    GPoint text_pos = {
-      .x = (int16_t)(lx * cos_lookup(ROTATION_OFFSET) / TRIG_MAX_RATIO
-                   + ly * sin_lookup(ROTATION_OFFSET) / TRIG_MAX_RATIO) + center.x,
-      .y = (int16_t)(-lx * sin_lookup(ROTATION_OFFSET) / TRIG_MAX_RATIO
-                   + ly * cos_lookup(ROTATION_OFFSET) / TRIG_MAX_RATIO) + center.y,
-    };
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-    GRect text_box = GRect(text_pos.x - 25, text_pos.y - 8, 50, 16);
-    graphics_context_set_text_color(ctx, GColorBlack);
-    graphics_draw_text(ctx, "pebble", font, text_box,
-                       GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
   }
 
   // Calculate time values
@@ -183,12 +175,33 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
-  
+  GPoint center = grect_center_point(&bounds);
+  int circle_r = bounds.size.w / 2 - PBL_IF_RECT_ELSE(10, 16);
+
   // Create canvas layer
   s_canvas_layer = layer_create(bounds);
   layer_set_update_proc(s_canvas_layer, canvas_update_proc);
   layer_add_child(window_layer, s_canvas_layer);
-  
+
+  // Create text bitmap layer from pre-rotated PNG resource
+  s_text_bitmap = gbitmap_create_with_resource(TEXT_PEBBLE_RESOURCE);
+  GSize img_size = gbitmap_get_bounds(s_text_bitmap).size;
+  // Position: above right side of band in rotated coordinate frame
+  int lx = circle_r / 2;
+  int ly = -38;
+  GPoint dest = {
+    .x = (int16_t)(lx * cos_lookup(ROTATION_OFFSET) / TRIG_MAX_RATIO
+                 - ly * sin_lookup(ROTATION_OFFSET) / TRIG_MAX_RATIO) + center.x,
+    .y = (int16_t)(lx * sin_lookup(ROTATION_OFFSET) / TRIG_MAX_RATIO
+                 + ly * cos_lookup(ROTATION_OFFSET) / TRIG_MAX_RATIO) + center.y,
+  };
+  GRect img_frame = GRect(dest.x - img_size.w / 2, dest.y - img_size.h / 2,
+                          img_size.w, img_size.h);
+  s_text_layer = bitmap_layer_create(img_frame);
+  bitmap_layer_set_bitmap(s_text_layer, s_text_bitmap);
+  bitmap_layer_set_compositing_mode(s_text_layer, GCompOpSet);
+  layer_add_child(window_layer, bitmap_layer_get_layer(s_text_layer));
+
   // Get initial time
   time_t temp = time(NULL);
   s_last_time = *localtime(&temp);
@@ -197,6 +210,8 @@ static void main_window_load(Window *window) {
 // Window unload
 static void main_window_unload(Window *window) {
   layer_destroy(s_canvas_layer);
+  bitmap_layer_destroy(s_text_layer);
+  gbitmap_destroy(s_text_bitmap);
 }
 
 // App initialization
@@ -213,12 +228,13 @@ static void init() {
   
   // Register with TickTimerService
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-  
 }
 
 // App deinitialization
 static void deinit() {
   window_destroy(s_main_window);
+  bitmap_layer_destroy(s_text_layer);
+  gbitmap_destroy(s_text_bitmap);
 }
 
 // Main
