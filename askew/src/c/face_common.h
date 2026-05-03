@@ -1,28 +1,33 @@
 #pragma once
 #include <pebble.h>
 
-#define ANGLE 20
-#define ROTATION_OFFSET (TRIG_MAX_ANGLE * ANGLE / 360)
+#define DEFAULT_ANGLE 20
 
-#if ANGLE == 10
-  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_10
-  #define TEXT_PEBBLE_LARGE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_10_LARGE
-#elif ANGLE == 15
-  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_15
-  #define TEXT_PEBBLE_LARGE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_15_LARGE
-#elif ANGLE == 20
-  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_20
-  #define TEXT_PEBBLE_LARGE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_20_LARGE
-#elif ANGLE == 25
-  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_25
-  #define TEXT_PEBBLE_LARGE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_25_LARGE
-#elif ANGLE == 30
-  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_30
-  #define TEXT_PEBBLE_LARGE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_30_LARGE
-#else
-  #define TEXT_PEBBLE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_0
-  #define TEXT_PEBBLE_LARGE_RESOURCE RESOURCE_ID_TEXT_PEBBLE_0_LARGE
-#endif
+// Runtime rotation offset — set from persisted settings in simple-askew.c
+extern int32_t g_rotation_offset;
+
+// Map angle value to the correct pre-rotated text bitmap resource ID
+static inline uint32_t get_text_resource_id(int angle, bool large) {
+  if (large) {
+    switch (angle) {
+      case 10: return RESOURCE_ID_TEXT_PEBBLE_10_LARGE;
+      case 15: return RESOURCE_ID_TEXT_PEBBLE_15_LARGE;
+      case 20: return RESOURCE_ID_TEXT_PEBBLE_20_LARGE;
+      case 25: return RESOURCE_ID_TEXT_PEBBLE_25_LARGE;
+      case 30: return RESOURCE_ID_TEXT_PEBBLE_30_LARGE;
+      default: return RESOURCE_ID_TEXT_PEBBLE_0_LARGE;
+    }
+  } else {
+    switch (angle) {
+      case 10: return RESOURCE_ID_TEXT_PEBBLE_10;
+      case 15: return RESOURCE_ID_TEXT_PEBBLE_15;
+      case 20: return RESOURCE_ID_TEXT_PEBBLE_20;
+      case 25: return RESOURCE_ID_TEXT_PEBBLE_25;
+      case 30: return RESOURCE_ID_TEXT_PEBBLE_30;
+      default: return RESOURCE_ID_TEXT_PEBBLE_0;
+    }
+  }
+}
 
 static inline GColor get_hand_hour_color() {
 #ifdef PBL_COLOR
@@ -46,8 +51,8 @@ static inline void draw_hands(GContext *ctx, GRect bounds, struct tm *t) {
   int hour   = t->tm_hour % 12;
   int minute = t->tm_min;
 
-  int32_t minute_angle = TRIG_MAX_ANGLE * minute / 60 + ROTATION_OFFSET;
-  int32_t hour_angle   = (TRIG_MAX_ANGLE * ((hour * 60) + minute)) / (12 * 60) + ROTATION_OFFSET;
+  int32_t minute_angle = TRIG_MAX_ANGLE * minute / 60 + g_rotation_offset;
+  int32_t hour_angle   = (TRIG_MAX_ANGLE * ((hour * 60) + minute)) / (12 * 60) + g_rotation_offset;
 
   // Hour hand
   graphics_context_set_stroke_width(ctx, 4);

@@ -12,12 +12,14 @@
     "build": "pebble build",
     "clean": "pebble clean",
     "emulator": "npm run clean && npm run build && pebble install --emulator ",
-    "phone": "npm run clean && npm run build && pebble install --phone",
-    "config": "pebble emu-app-config --emulator",
-    "logs": "pebble logs --emulator",
-    "tap": "pebble emu-tap --direction y+ --emulator"
+    "phone": "npm run clean && npm run build && pebble install --phone ",
+    "config": "pebble emu-app-config --emulator ",
+    "logs": "pebble logs --emulator ",
+    "tap": "pebble emu-tap --direction y+ --emulator "
   },
-  "dependencies": {},
+  "dependencies": {
+    "@rebble/clay": "^1.0.8"
+  },
   "pebble": {
     "displayName": "Simple Askew",
     "uuid": "b8fb089f-28ae-447c-acce-f21f82509ffe",
@@ -33,25 +35,73 @@
       "gabbro"
     ],
     "watchapp": {
-      "watchface": false
+      "watchface": true
     },
     "messageKeys": [
-      "dummy"
+      "ANGLE"
     ],
     "resources": {
       "media": [
-        {"type": "bitmap", "name": "TEXT_PEBBLE_0", "file": "images/text_pebble_0.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_10", "file": "images/text_pebble_10.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_15", "file": "images/text_pebble_15.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_20", "file": "images/text_pebble_20.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_25", "file": "images/text_pebble_25.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_30", "file": "images/text_pebble_30.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_0_LARGE", "file": "images/text_pebble_0_large.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_10_LARGE", "file": "images/text_pebble_10_large.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_15_LARGE", "file": "images/text_pebble_15_large.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_20_LARGE", "file": "images/text_pebble_20_large.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_25_LARGE", "file": "images/text_pebble_25_large.png"},
-        {"type": "bitmap", "name": "TEXT_PEBBLE_30_LARGE", "file": "images/text_pebble_30_large.png"}
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_0",
+          "file": "images/text_pebble_0.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_10",
+          "file": "images/text_pebble_10.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_15",
+          "file": "images/text_pebble_15.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_20",
+          "file": "images/text_pebble_20.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_25",
+          "file": "images/text_pebble_25.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_30",
+          "file": "images/text_pebble_30.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_0_LARGE",
+          "file": "images/text_pebble_0_large.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_10_LARGE",
+          "file": "images/text_pebble_10_large.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_15_LARGE",
+          "file": "images/text_pebble_15_large.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_20_LARGE",
+          "file": "images/text_pebble_20_large.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_25_LARGE",
+          "file": "images/text_pebble_25_large.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "TEXT_PEBBLE_30_LARGE",
+          "file": "images/text_pebble_30_large.png"
+        }
       ]
     }
   }

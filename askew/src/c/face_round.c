@@ -24,7 +24,7 @@ void face_round_draw(GContext *ctx, GRect bounds, struct tm *t) {
   };
   GPathInfo band_info = { .num_points = 4, .points = band_pts };
   GPath *band = gpath_create(&band_info);
-  gpath_rotate_to(band, ROTATION_OFFSET);
+  gpath_rotate_to(band, g_rotation_offset);
   gpath_move_to(band, center);
   graphics_context_set_fill_color(ctx, GColorLightGray);
   gpath_draw_filled(ctx, band);
@@ -38,11 +38,11 @@ void face_round_draw(GContext *ctx, GRect bounds, struct tm *t) {
   graphics_draw_arc(ctx, arc_rect, GOvalScaleModeFitCircle, 0, TRIG_MAX_ANGLE);
 
   // Radial minute ticks (behind radial hour lines, from circle edge outward)
-  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorWindsorTan, GColorWhite));
+  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorRajah, GColorWhite));
   graphics_context_set_stroke_width(ctx, 1);
   for (int i = 0; i < 60; i++) {
     if (i % 5 == 0) continue;
-    int32_t a = TRIG_MAX_ANGLE * i / 60 + ROTATION_OFFSET;
+    int32_t a = TRIG_MAX_ANGLE * i / 60 + g_rotation_offset;
     GPoint inner = {
       .x = (int16_t)(sin_lookup(a) * (circle_r + 2) / TRIG_MAX_RATIO) + center.x,
       .y = (int16_t)(-cos_lookup(a) * (circle_r + 2) / TRIG_MAX_RATIO) + center.y,
@@ -55,10 +55,10 @@ void face_round_draw(GContext *ctx, GRect bounds, struct tm *t) {
   }
 
   // Radial hour lines
-  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorWhite));
+  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite));
   graphics_context_set_stroke_width(ctx, 3);
   for (int i = 0; i < 12; i++) {
-    int32_t a = TRIG_MAX_ANGLE * i / 12 + ROTATION_OFFSET;
+    int32_t a = TRIG_MAX_ANGLE * i / 12 + g_rotation_offset;
     GPoint inner = {
       .x = (int16_t)(sin_lookup(a) * (circle_r + 2) / TRIG_MAX_RATIO) + center.x,
       .y = (int16_t)(-cos_lookup(a) * (circle_r + 2) / TRIG_MAX_RATIO) + center.y,

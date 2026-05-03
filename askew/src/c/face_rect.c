@@ -18,11 +18,11 @@ void face_rect_draw(GContext *ctx, GRect bounds, struct tm *t) {
   // --- Radial lines FIRST (behind the rect) ---
 
   // Minute ticks
-  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorWindsorTan, GColorWhite));
+  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorRajah, GColorWhite));
   graphics_context_set_stroke_width(ctx, 1);
   for (int i = 0; i < 60; i++) {
     if (i % 5 == 0) continue;
-    int32_t a = TRIG_MAX_ANGLE * i / 60 + ROTATION_OFFSET;
+    int32_t a = TRIG_MAX_ANGLE * i / 60 + g_rotation_offset;
     GPoint inner = {
       .x = (int16_t)(sin_lookup(a) * (hw + 2) / TRIG_MAX_RATIO) + center.x,
       .y = (int16_t)(-cos_lookup(a) * (hw + 2) / TRIG_MAX_RATIO) + center.y,
@@ -35,10 +35,10 @@ void face_rect_draw(GContext *ctx, GRect bounds, struct tm *t) {
   }
 
   // Hour lines
-  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorWhite));
+  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite));
   graphics_context_set_stroke_width(ctx, 3);
   for (int i = 0; i < 12; i++) {
-    int32_t a = TRIG_MAX_ANGLE * i / 12 + ROTATION_OFFSET;
+    int32_t a = TRIG_MAX_ANGLE * i / 12 + g_rotation_offset;
     GPoint inner = {
       .x = (int16_t)(sin_lookup(a) * (hw + 2) / TRIG_MAX_RATIO) + center.x,
       .y = (int16_t)(-cos_lookup(a) * (hw + 2) / TRIG_MAX_RATIO) + center.y,
@@ -72,7 +72,7 @@ void face_rect_draw(GContext *ctx, GRect bounds, struct tm *t) {
   };
   GPathInfo rrect_info = { .num_points = 12, .points = rrect_pts };
   GPath *rrect = gpath_create(&rrect_info);
-  gpath_rotate_to(rrect, ROTATION_OFFSET);
+  gpath_rotate_to(rrect, g_rotation_offset);
   gpath_move_to(rrect, center);
   graphics_context_set_fill_color(ctx, GColorWhite);
   gpath_draw_filled(ctx, rrect);
@@ -89,7 +89,7 @@ void face_rect_draw(GContext *ctx, GRect bounds, struct tm *t) {
   };
   GPathInfo band_info = { .num_points = 4, .points = band_pts };
   GPath *band = gpath_create(&band_info);
-  gpath_rotate_to(band, ROTATION_OFFSET);
+  gpath_rotate_to(band, g_rotation_offset);
   gpath_move_to(band, center);
   graphics_context_set_fill_color(ctx, GColorLightGray);
   gpath_draw_filled(ctx, band);
