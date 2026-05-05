@@ -26,9 +26,12 @@ static void set_text_bitmap(int angle) {
   bool large = bounds.size.w >= 200;
 
   if (s_text_bitmap) {
+    bitmap_layer_set_bitmap(s_text_layer, NULL);
     gbitmap_destroy(s_text_bitmap);
+    s_text_bitmap = NULL;
   }
   s_text_bitmap = gbitmap_create_with_resource(get_text_resource_id(angle, large));
+  if (!s_text_bitmap) return;
   GSize img_size = gbitmap_get_bounds(s_text_bitmap).size;
 
   int lx = circle_r / 2;
@@ -62,6 +65,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 
 static void load_settings() {
   s_current_angle = persist_exists(PERSIST_KEY_ANGLE) ? persist_read_int(PERSIST_KEY_ANGLE) : DEFAULT_ANGLE;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Current angle now %d", s_current_angle);
 }
 
 static void save_settings() {
@@ -69,9 +73,11 @@ static void save_settings() {
 }
 
 static void inbox_received_callback(DictionaryIterator *iter, void *context) {
+  if (!s_text_layer) return;  // window not yet loaded
   Tuple *t = dict_find(iter, MESSAGE_KEY_ANGLE);
   if (t) {
-    int angle = (int)t->value->int32;
+    int angle = atoi(t->value->cstring);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Received angle now %d", angle);
     s_current_angle = angle;
     g_rotation_offset = (int32_t)(TRIG_MAX_ANGLE * angle / 360);
     set_text_bitmap(angle);
@@ -114,7 +120,7 @@ static void init() {
 
   // Register AppMessage for Clay settings
   app_message_register_inbox_received(inbox_received_callback);
-  app_message_open(128, 128);
+  app_message_open(64, 0);
 
   // Create main window
   s_main_window = window_create();
