@@ -1,36 +1,52 @@
-# askew
+# Simple Askew
 
-A Pebble watchapp/watchface written in C using the Pebble SDK.
+A minimalist analog watchface for Pebble smartwatches inspired by clean, modern clock design.
 
-## Building & running
+## Screenshots
+### Pebble Classic/Steel/2/Duo
+![Aplite 1](assets/aplite_1.png)
+![Aplite 2](assets/aplite_2.png)
+![Aplite 3](assets/aplite_3.png)
 
-```sh
-pebble build                          # build for all targetPlatforms
-pebble install --emulator emery       # install on the emery emulator
-pebble install --phone <ip>           # install to a paired phone
-```
+### Pebble Time/Time Steel
+![Basalt 1](assets/basalt_1.png)
+![Basalt 2](assets/basalt_2.png)
+![Basalt 3](assets/basalt_3.png)
 
-## Target platforms
+### Pebble Time Round
+![Chalk 1](assets/chalk_1.png)
+![Chalk 2](assets/chalk_2.png)
+![Chalk 3](assets/chalk_3.png)
 
-`targetPlatforms` in `package.json` controls which watches you build for. The
-modern Pebble hardware is **emery** (Pebble Time 2), **gabbro** (Pebble Round
-2), and **flint** (Pebble 2 Duo); the original Pebble platforms (aplite,
-basalt, chalk, diorite) are included by default for backwards compatibility.
+### Pebble Time 2
+![Emery 1](assets/emery_1.png)
+![Emery 2](assets/emery_2.png)
+![Emery 3](assets/emery_3.png)
 
-## Project layout
+### Pebble Time Round 2
+![Gabbro 1](assets/gabbro_1.png)
+![Gabbro 2](assets/gabbro_2.png)
+![Gabbro 3](assets/gabbro_3.png)
 
-```
-src/c/           C source for the watchapp
-src/pkjs/        PebbleKit JS (phone-side) source, if any
-worker_src/c/    Background worker source, if any
-resources/       Images, fonts, and other bundled resources
-package.json     Project metadata (UUID, platforms, resources, message keys)
-wscript          Build rules — usually no need to edit
-```
+## Store
+[Rebble App Store](https://apps.rebble.io/en_US/application/69fa46f9ea28ba00099a6c61)
+[Pebble App Store](https://apps.repebble.com/application/69fa46f9ea28ba00099a6c61)
 
-By default this project is configured as a watchapp. To make it a watchface,
-set `pebble.watchapp.watchface` to `true` in `package.json`.
 
-## Documentation
+## Platform Support
 
-Full SDK docs, tutorials, and API reference: <https://developer.repebble.com>
+- Aplite (144×168 B&W)
+- Basalt (144×168 color)
+- Chalk (180×180 round color)
+- Diorite (144×168 B&W)
+- Emery (200×228 color)
+- Flint (144×168 B&W)
+
+## Support
+For issues, questions, or suggestions, please open an issue on GitHub.
+
+## License
+MIT License - feel free to modify and share!
+
+---
+Built with ❤️ for the Pebble community
