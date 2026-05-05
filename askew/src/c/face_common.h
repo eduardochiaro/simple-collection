@@ -31,7 +31,7 @@ static inline uint32_t get_text_resource_id(int angle, bool large) {
 
 static inline GColor get_hand_hour_color() {
 #ifdef PBL_COLOR
-  return GColorChromeYellow;
+  return GColorWindsorTan;
 #else
   return GColorBlack;
 #endif
@@ -39,7 +39,7 @@ static inline GColor get_hand_hour_color() {
 
 static inline GColor get_hand_minute_color() {
 #ifdef PBL_COLOR
-  return GColorRajah;
+  return GColorWindsorTan;
 #else
   return GColorBlack;
 #endif
