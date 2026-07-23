@@ -111,7 +111,29 @@ if $has_failure; then
   echo -e "${RED}${BOLD}  Build failed.${NC}"
   echo ""
   exit 1
-else
-  echo -e "${GREEN}${BOLD}  ★  All watchfaces built successfully!${NC}"
-  echo ""
 fi
+
+# Collect releases
+RELEASES="build-releases"
+for i in $(seq 0 $((NUM - 1))); do
+  edition="${EDITIONS[$i]}"
+  pbw=$(ls "$edition"/build/*.pbw 2>/dev/null | head -1)
+  if [[ -z "$pbw" ]]; then
+    echo -e "  ${RED}✗${NC}  ${BOLD}${edition}${NC} ${RED}no .pbw found${NC}"
+    has_failure=true
+    continue
+  fi
+  version=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['version'])" "$edition/package.json")
+  mkdir -p "$RELEASES/$edition"
+  cp "$pbw" "$RELEASES/$edition/${edition}-${version}.pbw"
+  printf "  ${CYAN}→${NC}  ${DIM}%s/%s/%s-%s.pbw${NC}\n" "$RELEASES" "$edition" "$edition" "$version"
+done
+
+echo ""
+if $has_failure; then
+  echo -e "${RED}${BOLD}  Release copy failed.${NC}"
+  echo ""
+  exit 1
+fi
+echo -e "${GREEN}${BOLD}  ★  All watchfaces built successfully!${NC}"
+echo ""

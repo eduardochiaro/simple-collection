@@ -1,7 +1,7 @@
 {
   "name": "simple-enough",
   "author": "Eduardo Chiaro",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "keywords": [
     "pebble-app",
     "watchface",
@@ -50,13 +50,8 @@
         },
         {
           "type": "raw",
-          "name": "NUMBER_6_BLACK",
-          "file": "6-black.pdc"
-        },
-        {
-          "type": "raw",
-          "name": "NUMBER_6_WHITE",
-          "file": "6-white.pdc"
+          "name": "NUMBER_6",
+          "file": "6.pdc"
         }
       ]
     },

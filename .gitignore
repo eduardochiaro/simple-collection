@@ -3,3 +3,5 @@ build/
 node_modules/
 .pebble/
 .lock-waf_darwin_build
+/build-releases
+.vscode/settings.json

@@ -1,7 +1,7 @@
 {
   "name": "simple-trio",
   "author": "Eduardo Chiaro",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "keywords": [
     "pebble-app",
     "watchface",
@@ -18,7 +18,7 @@
     "tap": "pebble emu-tap --direction y+ --emulator"
   },
   "dependencies": {
-    "@rebble/clay": "^1.0.6"
+    "@rebble/clay": "^1.0.10"
   },
   "pebble": {
     "displayName": "Simple Trio",
@@ -31,7 +31,8 @@
       "chalk",
       "diorite",
       "emery",
-      "flint"
+      "flint",
+      "gabbro"
     ],
     "watchapp": {
       "watchface": true
@@ -49,33 +50,18 @@
         },
         {
           "type": "raw",
-          "name": "NUMBER_6_BLACK",
-          "file": "6-black.pdc"
+          "name": "NUMBER_6",
+          "file": "6.pdc"
         },
         {
           "type": "raw",
-          "name": "NUMBER_6_WHITE",
-          "file": "6-white.pdc"
+          "name": "NUMBER_2",
+          "file": "2.pdc"
         },
         {
           "type": "raw",
-          "name": "NUMBER_2_BLACK",
-          "file": "2-black.pdc"
-        },
-        {
-          "type": "raw",
-          "name": "NUMBER_2_WHITE",
-          "file": "2-white.pdc"
-        },
-        {
-          "type": "raw",
-          "name": "NUMBER_10_BLACK",
-          "file": "10-black.pdc"
-        },
-        {
-          "type": "raw",
-          "name": "NUMBER_10_WHITE",
-          "file": "10-white.pdc"
+          "name": "NUMBER_10",
+          "file": "10.pdc"
         }
       ]
     },

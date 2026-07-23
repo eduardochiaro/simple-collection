@@ -48,9 +48,7 @@ This is a **Pebble smartwatch analog watchface** called "Simple Trio" by Eduardo
 - Bidirectional communication with watch via AppMessage
 
 ### 3. Resources
-- `6-black.pdc` & `6-white.pdc`: Vector images of the number 6 (for different themes)
-- `2-black.pdc` & `2-white.pdc`: Vector images of the number 2 (for different themes)
-- `10-black.pdc` & `10-white.pdc`: Vector images of the number 10 (for different themes)
+- `6.pdc`, `2.pdc`, `10.pdc`: Vector images of the numbers; stroke color is set at draw time from the theme (`pdc_set_stroke_color`), so there is one file per number
 - Menu icon (PNG)
 - Assets folder with screenshots
 

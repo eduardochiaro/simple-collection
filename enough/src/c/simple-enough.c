@@ -2,8 +2,7 @@
 
 static Window *s_main_window;
 static Layer *s_canvas_layer;
-static GDrawCommandImage *s_number_6_white;
-static GDrawCommandImage *s_number_6_black;
+static GDrawCommandImage *s_number_6;
 
 // Time tracking
 static struct tm s_last_time;
@@ -38,6 +37,45 @@ static GColor get_hand_minute_color() {
     return s_invert_colors ? GColorWhite : GColorBlack;  // Reverse on b/w screens
   #endif
 }
+
+// Recolor a PDC image in place (numbers are stroke-only paths)
+static void pdc_set_stroke_color(GDrawCommandImage *img, GColor color) {
+  GDrawCommandList *list = gdraw_command_image_get_command_list(img);
+  for (uint32_t i = 0, n = gdraw_command_list_get_num_commands(list); i < n; i++) {
+    gdraw_command_set_stroke_color(gdraw_command_list_get_command(list, i), color);
+  }
+}
+
+// The number PDCs are drawn for chalk's 180px round screen. Bigger round
+// screens (gabbro, 260px) get them scaled up in place at load time.
+#if defined(PBL_ROUND) && PBL_DISPLAY_WIDTH > 180
+  #define PDC_SCALE_NUM PBL_DISPLAY_WIDTH
+  #define PDC_SCALE_DEN 180
+  #define HAND_WIDTH 5       // thicker hands to match the bigger screen
+  #define HOUR_HAND_PCT 75   // shorter hour hand, the scaled-up face makes it read long
+  #define ACCENT_LINE_LEN 65 // 12/3/9 o'clock marks, scaled from 45
+
+static void pdc_scale(GDrawCommandImage *img) {
+  GDrawCommandList *list = gdraw_command_image_get_command_list(img);
+  for (uint32_t i = 0, n = gdraw_command_list_get_num_commands(list); i < n; i++) {
+    GDrawCommand *cmd = gdraw_command_list_get_command(list, i);
+    for (uint16_t p = 0, np = gdraw_command_get_num_points(cmd); p < np; p++) {
+      GPoint pt = gdraw_command_get_point(cmd, p);
+      gdraw_command_set_point(cmd, p, GPoint(pt.x * PDC_SCALE_NUM / PDC_SCALE_DEN,
+                                             pt.y * PDC_SCALE_NUM / PDC_SCALE_DEN));
+    }
+    gdraw_command_set_stroke_width(cmd, gdraw_command_get_stroke_width(cmd) * PDC_SCALE_NUM / PDC_SCALE_DEN);
+  }
+  GSize size = gdraw_command_image_get_bounds_size(img);
+  gdraw_command_image_set_bounds_size(img, GSize(size.w * PDC_SCALE_NUM / PDC_SCALE_DEN,
+                                                 size.h * PDC_SCALE_NUM / PDC_SCALE_DEN));
+}
+#else
+  #define pdc_scale(img) ((void)0)
+  #define HAND_WIDTH 3
+  #define HOUR_HAND_PCT 100
+  #define ACCENT_LINE_LEN 45
+#endif
 
 // Load settings
 static void load_settings() {
@@ -94,14 +132,14 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   int32_t angle_12 = 0;
   GPoint line_12 = {
     .x = center.x,
-    .y = (int16_t)(-cos_lookup(angle_12) * 45 / TRIG_MAX_RATIO) + center.y,
+    .y = (int16_t)(-cos_lookup(angle_12) * ACCENT_LINE_LEN / TRIG_MAX_RATIO) + center.y,
   };
   graphics_draw_line(ctx, center, line_12);
   
   // 3 o'clock (right)
   int32_t angle_3 = TRIG_MAX_ANGLE / 4;
   GPoint line_3 = {
-    .x = (int16_t)(sin_lookup(angle_3) * 45 / TRIG_MAX_RATIO) + center.x,
+    .x = (int16_t)(sin_lookup(angle_3) * ACCENT_LINE_LEN / TRIG_MAX_RATIO) + center.x,
     .y = center.y,
   };
   graphics_draw_line(ctx, center, line_3);
@@ -109,7 +147,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   // 9 o'clock (left)
   int32_t angle_9 = TRIG_MAX_ANGLE * 3 / 4;
   GPoint line_9 = {
-    .x = (int16_t)(sin_lookup(angle_9) * 45 / TRIG_MAX_RATIO) + center.x,
+    .x = (int16_t)(sin_lookup(angle_9) * ACCENT_LINE_LEN / TRIG_MAX_RATIO) + center.x,
     .y = center.y,
   };
   graphics_draw_line(ctx, center, line_9);
@@ -121,15 +159,16 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   
   // Draw PDC number 6 at bottom
   const int top_padding = 22;
-  if (s_number_6_black && s_number_6_white) {
-    GSize img_size = gdraw_command_image_get_bounds_size(s_invert_colors ? s_number_6_white : s_number_6_black);
+  if (s_number_6) {
+    GSize img_size = gdraw_command_image_get_bounds_size(s_number_6);
+    pdc_set_stroke_color(s_number_6, get_accent_color());
 
     // Draw background for number 6
     graphics_context_set_fill_color(ctx, get_background_color());
     graphics_fill_rect(ctx, GRect(center.x - (img_size.w - 4) / 2, (bounds.size.h / 2) + top_padding - 4, img_size.w - 4, img_size.h + 8), 2, GCornersAll);
-    
+
     GRect img_rect = GRect(center.x - img_size.w / 2, (bounds.size.h / 2) + top_padding, img_size.w, img_size.h);
-    gdraw_command_image_draw(ctx, s_invert_colors ? s_number_6_white : s_number_6_black, img_rect.origin);
+    gdraw_command_image_draw(ctx, s_number_6, img_rect.origin);
   }
   
   // Calculate time values
@@ -141,11 +180,11 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   int32_t hour_angle = (TRIG_MAX_ANGLE * ((hour * 60) + minute)) / (12 * 60);
   
   // Draw hour hand (shorter, thicker, red)
-  graphics_context_set_stroke_width(ctx, 3);
+  graphics_context_set_stroke_width(ctx, HAND_WIDTH);
   graphics_context_set_stroke_color(ctx, get_hand_hour_color());
   GPoint hour_hand = {
-    .x = (int16_t)(sin_lookup(hour_angle) * (bounds.size.w / 2 - PBL_IF_RECT_ELSE(28, 44)) / TRIG_MAX_RATIO) + center.x,
-    .y = (int16_t)(-cos_lookup(hour_angle) * (bounds.size.w / 2 - PBL_IF_RECT_ELSE(28, 44)) / TRIG_MAX_RATIO) + center.y,
+    .x = (int16_t)(sin_lookup(hour_angle) * ((bounds.size.w / 2 - PBL_IF_RECT_ELSE(28, 44)) * HOUR_HAND_PCT / 100) / TRIG_MAX_RATIO) + center.x,
+    .y = (int16_t)(-cos_lookup(hour_angle) * ((bounds.size.w / 2 - PBL_IF_RECT_ELSE(28, 44)) * HOUR_HAND_PCT / 100) / TRIG_MAX_RATIO) + center.y,
   };
   GPoint hour_hand_tail = {
     .x = (int16_t)(-sin_lookup(hour_angle) * 16 / TRIG_MAX_RATIO) + center.x,
@@ -156,7 +195,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_line(ctx, center, hour_hand);
   
   // Draw minute hand (longer, medium thickness, red)
-  graphics_context_set_stroke_width(ctx, 3);
+  graphics_context_set_stroke_width(ctx, HAND_WIDTH);
   graphics_context_set_stroke_color(ctx, get_hand_minute_color());
   GPoint minute_hand = {
     .x = (int16_t)(sin_lookup(minute_angle) * (bounds.size.w / 2 - PBL_IF_RECT_ELSE(8, 22)) / TRIG_MAX_RATIO) + center.x,
@@ -190,8 +229,8 @@ static void main_window_load(Window *window) {
   GRect bounds = layer_get_bounds(window_layer);
   
   // Load NUMBER_6 PDC resource
-  s_number_6_white = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_6_WHITE);
-  s_number_6_black = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_6_BLACK);
+  s_number_6 = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_6);
+  pdc_scale(s_number_6);
   
   // Create canvas layer
   s_canvas_layer = layer_create(bounds);
@@ -206,8 +245,7 @@ static void main_window_load(Window *window) {
 // Window unload
 static void main_window_unload(Window *window) {
   layer_destroy(s_canvas_layer);
-  gdraw_command_image_destroy(s_number_6_white);
-  gdraw_command_image_destroy(s_number_6_black);
+  gdraw_command_image_destroy(s_number_6);
 }
 
 // App initialization

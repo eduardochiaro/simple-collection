@@ -2,12 +2,9 @@
 
 static Window *s_main_window;
 static Layer *s_canvas_layer;
-static GDrawCommandImage *s_number_6_white;
-static GDrawCommandImage *s_number_6_black;
-static GDrawCommandImage *s_number_2_white;
-static GDrawCommandImage *s_number_2_black;
-static GDrawCommandImage *s_number_10_white;
-static GDrawCommandImage *s_number_10_black;
+static GDrawCommandImage *s_number_6;
+static GDrawCommandImage *s_number_2;
+static GDrawCommandImage *s_number_10;
 
 // Time tracking
 static struct tm s_last_time;
@@ -42,6 +39,43 @@ static GColor get_hand_minute_color() {
     return s_invert_colors ? GColorWhite : GColorBlack;  // Reverse on b/w screens
   #endif
 }
+
+// Recolor a PDC image in place (numbers are stroke-only paths)
+static void pdc_set_stroke_color(GDrawCommandImage *img, GColor color) {
+  GDrawCommandList *list = gdraw_command_image_get_command_list(img);
+  for (uint32_t i = 0, n = gdraw_command_list_get_num_commands(list); i < n; i++) {
+    gdraw_command_set_stroke_color(gdraw_command_list_get_command(list, i), color);
+  }
+}
+
+// The number PDCs are drawn for chalk's 180px round screen. Bigger round
+// screens (gabbro, 260px) get them scaled up in place at load time.
+#if defined(PBL_ROUND) && PBL_DISPLAY_WIDTH > 180
+  #define PDC_SCALE_NUM PBL_DISPLAY_WIDTH
+  #define PDC_SCALE_DEN 180
+  #define HAND_WIDTH 5       // thicker hands to match the bigger screen
+  #define HOUR_HAND_PCT 75   // shorter hour hand, the scaled-up face makes it read long
+
+static void pdc_scale(GDrawCommandImage *img) {
+  GDrawCommandList *list = gdraw_command_image_get_command_list(img);
+  for (uint32_t i = 0, n = gdraw_command_list_get_num_commands(list); i < n; i++) {
+    GDrawCommand *cmd = gdraw_command_list_get_command(list, i);
+    for (uint16_t p = 0, np = gdraw_command_get_num_points(cmd); p < np; p++) {
+      GPoint pt = gdraw_command_get_point(cmd, p);
+      gdraw_command_set_point(cmd, p, GPoint(pt.x * PDC_SCALE_NUM / PDC_SCALE_DEN,
+                                             pt.y * PDC_SCALE_NUM / PDC_SCALE_DEN));
+    }
+    gdraw_command_set_stroke_width(cmd, gdraw_command_get_stroke_width(cmd) * PDC_SCALE_NUM / PDC_SCALE_DEN);
+  }
+  GSize size = gdraw_command_image_get_bounds_size(img);
+  gdraw_command_image_set_bounds_size(img, GSize(size.w * PDC_SCALE_NUM / PDC_SCALE_DEN,
+                                                 size.h * PDC_SCALE_NUM / PDC_SCALE_DEN));
+}
+#else
+  #define pdc_scale(img) ((void)0)
+  #define HAND_WIDTH 3
+  #define HOUR_HAND_PCT 100
+#endif
 
 // Load settings
 static void load_settings() {
@@ -169,9 +203,10 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   }
 
   // Draw PDC number 10 at 10 o'clock position (12px from screen border)
-  if (s_number_10_black && s_number_10_white) {
-    GSize img_size_10 = gdraw_command_image_get_bounds_size(s_invert_colors ? s_number_10_white : s_number_10_black);
-    
+  if (s_number_10) {
+    GSize img_size_10 = gdraw_command_image_get_bounds_size(s_number_10);
+    pdc_set_stroke_color(s_number_10, get_accent_color());
+
     // Calculate position along 10 o'clock line (300 degrees)
     int32_t angle_10_pos = TRIG_MAX_ANGLE * 10 / 12;
     float sin_a = sin_lookup(angle_10_pos) / (float)TRIG_MAX_RATIO;
@@ -200,13 +235,14 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, GRect(pos_10.x + 2, pos_10.y + 2, img_size_10.w - 4, img_size_10.h - 4), 2, GCornersAll);
     
     // Draw number 10
-    gdraw_command_image_draw(ctx, s_invert_colors ? s_number_10_white : s_number_10_black, pos_10);
+    gdraw_command_image_draw(ctx, s_number_10, pos_10);
   }
 
   // Draw PDC number 2 at 2 o'clock position (12px from screen border)
-  if (s_number_2_black && s_number_2_white) {
-    GSize img_size_2 = gdraw_command_image_get_bounds_size(s_invert_colors ? s_number_2_white : s_number_2_black);
-    
+  if (s_number_2) {
+    GSize img_size_2 = gdraw_command_image_get_bounds_size(s_number_2);
+    pdc_set_stroke_color(s_number_2, get_accent_color());
+
     // Calculate position along 2 o'clock line (60 degrees)
     int32_t angle_2_pos = TRIG_MAX_ANGLE * 2 / 12;
     float sin_a = sin_lookup(angle_2_pos) / (float)TRIG_MAX_RATIO;
@@ -234,13 +270,14 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, GRect(pos_2.x + 2, pos_2.y + 2, img_size_2.w - 4, img_size_2.h - 4), 2, GCornersAll);
     
     // Draw number 2
-    gdraw_command_image_draw(ctx, s_invert_colors ? s_number_2_white : s_number_2_black, pos_2);
+    gdraw_command_image_draw(ctx, s_number_2, pos_2);
   }
 
   // Draw PDC number 6 at bottom (12px from screen border)
-  if (s_number_6_black && s_number_6_white) {
-    GSize img_size = gdraw_command_image_get_bounds_size(s_invert_colors ? s_number_6_white : s_number_6_black);
-    
+  if (s_number_6) {
+    GSize img_size = gdraw_command_image_get_bounds_size(s_number_6);
+    pdc_set_stroke_color(s_number_6, get_accent_color());
+
     // Position 12px from bottom border
     int y_position = bounds.size.h - img_size.h - 12;
 
@@ -249,7 +286,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, GRect(center.x - (img_size.w - 4) / 2, y_position - 4, img_size.w - 4, img_size.h + 8), 2, GCornersAll);
     
     GRect img_rect = GRect(center.x - img_size.w / 2, y_position, img_size.w, img_size.h);
-    gdraw_command_image_draw(ctx, s_invert_colors ? s_number_6_white : s_number_6_black, img_rect.origin);
+    gdraw_command_image_draw(ctx, s_number_6, img_rect.origin);
   }
   
   // Calculate time values
@@ -261,11 +298,11 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   int32_t hour_angle = (TRIG_MAX_ANGLE * ((hour * 60) + minute)) / (12 * 60);
   
   // Draw hour hand (shorter, thicker, red)
-  graphics_context_set_stroke_width(ctx, 3);
+  graphics_context_set_stroke_width(ctx, HAND_WIDTH);
   graphics_context_set_stroke_color(ctx, get_hand_hour_color());
   GPoint hour_hand = {
-    .x = (int16_t)(sin_lookup(hour_angle) * (bounds.size.w / 2 - PBL_IF_RECT_ELSE(28, 44)) / TRIG_MAX_RATIO) + center.x,
-    .y = (int16_t)(-cos_lookup(hour_angle) * (bounds.size.w / 2 - PBL_IF_RECT_ELSE(28, 44)) / TRIG_MAX_RATIO) + center.y,
+    .x = (int16_t)(sin_lookup(hour_angle) * ((bounds.size.w / 2 - PBL_IF_RECT_ELSE(28, 44)) * HOUR_HAND_PCT / 100) / TRIG_MAX_RATIO) + center.x,
+    .y = (int16_t)(-cos_lookup(hour_angle) * ((bounds.size.w / 2 - PBL_IF_RECT_ELSE(28, 44)) * HOUR_HAND_PCT / 100) / TRIG_MAX_RATIO) + center.y,
   };
   GPoint hour_hand_tail = {
     .x = (int16_t)(-sin_lookup(hour_angle) * 16 / TRIG_MAX_RATIO) + center.x,
@@ -276,7 +313,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_line(ctx, center, hour_hand);
   
   // Draw minute hand (longer, medium thickness, red)
-  graphics_context_set_stroke_width(ctx, 3);
+  graphics_context_set_stroke_width(ctx, HAND_WIDTH);
   graphics_context_set_stroke_color(ctx, get_hand_minute_color());
   GPoint minute_hand = {
     .x = (int16_t)(sin_lookup(minute_angle) * (bounds.size.w / 2 - PBL_IF_RECT_ELSE(8, 22)) / TRIG_MAX_RATIO) + center.x,
@@ -309,17 +346,13 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
   
-  // Load NUMBER_6 PDC resource
-  s_number_6_white = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_6_WHITE);
-  s_number_6_black = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_6_BLACK);
-  
-  // Load NUMBER_2 PDC resource
-  s_number_2_white = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_2_WHITE);
-  s_number_2_black = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_2_BLACK);
-  
-  // Load NUMBER_10 PDC resource
-  s_number_10_white = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_10_WHITE);
-  s_number_10_black = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_10_BLACK);
+  // Load number PDC resources
+  s_number_6 = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_6);
+  s_number_2 = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_2);
+  s_number_10 = gdraw_command_image_create_with_resource(RESOURCE_ID_NUMBER_10);
+  pdc_scale(s_number_6);
+  pdc_scale(s_number_2);
+  pdc_scale(s_number_10);
   
   // Create canvas layer
   s_canvas_layer = layer_create(bounds);
@@ -334,12 +367,9 @@ static void main_window_load(Window *window) {
 // Window unload
 static void main_window_unload(Window *window) {
   layer_destroy(s_canvas_layer);
-  gdraw_command_image_destroy(s_number_6_white);
-  gdraw_command_image_destroy(s_number_6_black);
-  gdraw_command_image_destroy(s_number_2_white);
-  gdraw_command_image_destroy(s_number_2_black);
-  gdraw_command_image_destroy(s_number_10_white);
-  gdraw_command_image_destroy(s_number_10_black);
+  gdraw_command_image_destroy(s_number_6);
+  gdraw_command_image_destroy(s_number_2);
+  gdraw_command_image_destroy(s_number_10);
 }
 
 // App initialization
